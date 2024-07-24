@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -8,7 +8,7 @@ export default defineConfig({
     port: 3000,
     open: true,
     proxy: {
-      '/graphql':{
+      '/graphql': {
         target: 'http://localhost:3001',
         secure: false,
         changeOrigin: true
@@ -19,5 +19,8 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    outDir: 'dist'  // Ensure the output directory is set to 'dist'
   }
-})
+});
