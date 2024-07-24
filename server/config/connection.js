@@ -12,24 +12,27 @@
 //module.exports = mongoose.connection;
 
 const mongoose = require('mongoose');
+require('dotenv').config(); // Load environment variables
 
-// Hardcode the MongoDB URI
-const MONGODB_URI = 'mongodb+srv://yongwooyun74:4sygt3ckJsExqlxb@cluster0.j2y0ej4.mongodb.net/googlebook?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = process.env.MONGODB_URI;
 
-// Log the hardcoded URI to verify
-console.log('MONGODB_URI:', MONGODB_URI);
+if (!MONGODB_URI) {
+  throw new Error('Missing MONGODB_URI environment variable');
+}
 
-mongoose.connect(
-  MONGODB_URI,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }
-).then(() => {
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+mongoose.connection.on('connected', () => {
   console.log('Successfully connected to MongoDB');
-}).catch((err) => {
-  console.error('Error connecting to MongoDB', err);
+});
+
+mongoose.connection.on('error', (err) => {
+  console.log('Error connecting to MongoDB:', err);
 });
 
 module.exports = mongoose.connection;
+
 
