@@ -5,11 +5,17 @@ const routes = require('./routes');
 const { ApolloServer } = require('@apollo/server');
 const { expressMiddleware } = require('@apollo/server/express4');
 const { authMiddleware } = require('./utils/auth');
-const { typeDefs, resolvers } = require('./schemas'); 
-require('dotenv').config();
+const { typeDefs, resolvers } = require('./schemas');
+
+// Hardcode the SECRET variable
+const SECRET = 'mysecretsshhhhh';
+
+// Log the hardcoded SECRET to verify
+console.log('SECRET:', SECRET);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
