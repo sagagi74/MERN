@@ -1,74 +1,50 @@
-const {User} = require('../models');
+const { User } = require('../models');
 const { signToken, AuthenticationError } = require('../utils/auth');
 
 const resolvers = {
-  Query:{
-   // me: async (parent,{ user = null, params }) => {
-    //  const foundUser = await User.findOne({
-     //   $or: [{ _id: user ? user._id : params.id }, { username: params.username }],
-    //  });
-    //  if (!foundUser) {
-      //  console.log('Cannot find user')
-       // return null;
-     // } 
-     // return foundUser;
-   // }
-//  },
-me: async (parent, args, context) => {
-  if (context.user) {
-    return User.findOne({ _id: context.user._id });
-  }
-  throw new AuthenticationError('You need to be logged in!');
-},
-},
-  Mutation: {
-    //login: async (parent,{body}) =>{
-   ///   const user = await User.findOne({ $or: [{ username: body.username }, { email: body.email }] });
-    //  if (!user) {
-    //    throw new Error ("Can't find this user" );
-    //  }
-
-    //  const correctPw = await user.isCorrectPassword(body.password);
-
-    //  if (!correctPw) {
-       // throw new Error ('Wrong password!');
-     // }
-    //  const token = signToken(user);
-     // return { token, user };
-   // },
-
-   login: async (parent, { email, password }) => {
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      throw new Error("Can't find this user");
-    }
-
-    const correctPw = await user.isCorrectPassword(password);
-
-    if (!correctPw) {
-      throw new Error('Wrong password!');
-    }
-
-    const token = signToken(user);
-    return { token, user };
+  Query: {
+    // Gets the logged-in user's info
+    me: async (parent, args, context) => {
+      if (context.user) {
+        return User.findOne({ _id: context.user._id });
+      }
+      throw new AuthenticationError('You need to be logged in!');
+    },
   },
+  Mutation: {
+    // Logs in a user with email and password, returns token and user info
+    login: async (parent, { email, password }) => {
+      const user = await User.findOne({ email });
 
+      if (!user) {
+        throw new Error("Can't find this user");
+      }
 
+      const correctPw = await user.isCorrectPassword(password);
 
+      if (!correctPw) {
+        throw new Error('Wrong password!');
+      }
 
-    addUser: async (parent,body) => {
+      const token = signToken(user);
+      return { token, user };
+    },
+
+    // Adds a new user and returns token and user info
+    addUser: async (parent, body) => {
       console.log(body);
       const user = await User.create(body);
 
       if (!user) {
-        throw new Error ('Cannot create User!');
+        throw new Error('Cannot create User!');
       }
       const token = signToken(user);
 
       return { token, user };
     },
-    saveBook: async (parent, {input} ,context) => {
+
+    // Saves a book to the user's savedBooks list, returns updated user info
+    saveBook: async (parent, { input }, context) => {
       try {
         const updatedUser = await User.findOneAndUpdate(
           { _id: context.user._id },
@@ -81,6 +57,8 @@ me: async (parent, args, context) => {
         return AuthenticationError;
       }
     },
+
+    // Removes a book from the user's savedBooks list by book ID, returns updated user info
     removeBook: async (parent, { bookId }, context) => {
       if (context.user) {
         const updatedUser = await User.findOneAndUpdate(
