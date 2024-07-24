@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Container, Col, Form, Button, Card, Row } from 'react-bootstrap';
+import {
+  Container,
+  Col,
+  Form,
+  Button,
+  Card,
+  Row
+} from 'react-bootstrap';
+
 import Auth from '../utils/auth';
-import { searchGoogleBooks } from '../utils/API';
+import { saveBook, searchGoogleBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 import { useMutation } from '@apollo/client';
 import { SAVE_BOOK } from '../utils/mutations';
@@ -9,9 +17,10 @@ import { SAVE_BOOK } from '../utils/mutations';
 const SearchBooks = () => {
   const [searchedBooks, setSearchedBooks] = useState([]);
   const [searchInput, setSearchInput] = useState('');
+
   const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
 
-  const [saveBook, { error }] = useMutation(SAVE_BOOK);
+  const [saveBook] = useMutation(SAVE_BOOK);
 
   useEffect(() => {
     return () => saveBookIds(savedBookIds);
@@ -37,8 +46,9 @@ const SearchBooks = () => {
         bookId: book.id,
         authors: book.volumeInfo.authors || ['No author to display'],
         title: book.volumeInfo.title,
-        description: book.volumeInfo.description,
+        description: book.volumeInfo.description || 'No description available',
         image: book.volumeInfo.imageLinks?.thumbnail || '',
+        link: book.volumeInfo.infoLink
       }));
 
       setSearchedBooks(bookData);
@@ -50,6 +60,7 @@ const SearchBooks = () => {
 
   const handleSaveBook = async (bookId) => {
     const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
+
     const token = Auth.loggedIn() ? Auth.getToken() : null;
 
     if (!token) {
@@ -57,8 +68,8 @@ const SearchBooks = () => {
     }
 
     try {
-      await saveBook({
-        variables: { book: bookToSave },
+      const { data } = await saveBook({
+        variables: { input: bookToSave }
       });
 
       setSavedBookIds([...savedBookIds, bookToSave.bookId]);
