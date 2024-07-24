@@ -6,25 +6,24 @@ import App from './App.jsx';
 import SearchBooks from './pages/SearchBooks';
 import SavedBooks from './pages/SavedBooks';
 
-// Creates a router with routes for the app
 const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
-    errorElement: <h1 className='display-2'>Wrong page!</h1>, // Error message for wrong page
+    errorElement: <h1 className='display-2'>Wrong page!</h1>,
     children: [
       {
         index: true,
-        element: <SearchBooks /> // Default route for searching books
-      }, {
+        element: <SearchBooks />
+      },
+      {
         path: '/saved',
-        element: <SavedBooks /> // Route for viewing saved books
+        element: <SavedBooks />
       }
     ]
   }
 ]);
 
-// Renders the app with the router
 ReactDOM.createRoot(document.getElementById('root')).render(
   <RouterProvider router={router} />
 );

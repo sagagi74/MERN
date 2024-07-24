@@ -1,6 +1,6 @@
 const { Schema, model } = require('mongoose');
-//const bcrypt = require('bcrypt'); render rejected
-const bcrypt = require('bcryptjs');
+//const bcrypt = require('bcrypt'); render
+const bcrypt = require('bcryptjs'); // Use bcryptjs instead of bcrypt
 
 // import schema from Book.js
 const bookSchema = require('./Book');

@@ -1,49 +1,57 @@
 const { User } = require('../models');
-const { signToken, AuthenticationError } = require('../utils/auth');
+const { signToken } = require('../utils/auth');
 
 const resolvers = {
   Query: {
-    // Gets the logged-in user's info
     me: async (parent, args, context) => {
-      if (context.user) {
-        return User.findOne({ _id: context.user._id });
+      const foundUser = await User.findOne({
+        $or: [{ _id: context.user ? context.user._id : args.id }, { username: args.username }],
+      });
+
+      if (!foundUser) {
+        console.log('Cannot find user');
+        return null;
       }
-      throw new AuthenticationError('You need to be logged in!');
+      return foundUser;
     },
   },
   Mutation: {
-    // Logs in a user with email and password, returns token and user info
     login: async (parent, { email, password }) => {
-      const user = await User.findOne({ email });
+      try {
+        const user = await User.findOne({ email });
 
-      if (!user) {
-        throw new Error("Can't find this user");
+        if (!user) {
+          throw new Error("Can't find this user");
+        }
+
+        const correctPw = await user.isCorrectPassword(password);
+
+        if (!correctPw) {
+          throw new Error('Wrong password!');
+        }
+
+        const token = signToken(user);
+        return { token, user };
+      } catch (error) {
+        console.log('Login error:', error); // Add this line to log login errors
+        throw new Error('Login failed');
       }
-
-      const correctPw = await user.isCorrectPassword(password);
-
-      if (!correctPw) {
-        throw new Error('Wrong password!');
-      }
-
-      const token = signToken(user);
-      return { token, user };
     },
+    addUser: async (parent, args) => {
+      try {
+        const user = await User.create(args);
 
-    // Adds a new user and returns token and user info
-    addUser: async (parent, body) => {
-      console.log(body);
-      const user = await User.create(body);
+        if (!user) {
+          throw new Error('Something went wrong!');
+        }
 
-      if (!user) {
-        throw new Error('Cannot create User!');
+        const token = signToken(user);
+        return { token, user };
+      } catch (error) {
+        console.log('Add user error:', error); // Add this line to log add user errors
+        throw new Error('Add user failed');
       }
-      const token = signToken(user);
-
-      return { token, user };
     },
-
-    // Saves a book to the user's savedBooks list, returns updated user info
     saveBook: async (parent, { input }, context) => {
       try {
         const updatedUser = await User.findOneAndUpdate(
@@ -53,14 +61,12 @@ const resolvers = {
         );
         return updatedUser;
       } catch (err) {
-        console.log(err);
-        return AuthenticationError;
+        console.log('Save book error:', err); // Add this line to log save book errors
+        throw new Error('Error saving book');
       }
     },
-
-    // Removes a book from the user's savedBooks list by book ID, returns updated user info
     removeBook: async (parent, { bookId }, context) => {
-      if (context.user) {
+      try {
         const updatedUser = await User.findOneAndUpdate(
           { _id: context.user._id },
           { $pull: { savedBooks: { bookId } } },
@@ -70,9 +76,12 @@ const resolvers = {
         if (!updatedUser) {
           throw new Error("Couldn't find user with this id!");
         }
+
         return updatedUser;
+      } catch (error) {
+        console.log('Remove book error:', error); // Add this line to log remove book errors
+        throw new Error('Error removing book');
       }
-      throw new AuthenticationError('You need to be logged in!');
     },
   },
 };
