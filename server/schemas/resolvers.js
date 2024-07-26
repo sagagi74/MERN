@@ -4,6 +4,7 @@ const { signToken } = require('../utils/auth');
 const resolvers = {
   Query: {
     me: async (parent, args, context) => {
+      // Query to find a user by ID or username
       const foundUser = await User.findOne({
         $or: [{ _id: context.user ? context.user._id : args.id }, { username: args.username }],
       });
@@ -18,42 +19,48 @@ const resolvers = {
   Mutation: {
     login: async (parent, { email, password }) => {
       try {
+        // Find user by email
         const user = await User.findOne({ email });
 
         if (!user) {
           throw new Error("Can't find this user");
         }
 
+        // Check if the password is correct
         const correctPw = await user.isCorrectPassword(password);
 
         if (!correctPw) {
           throw new Error('Wrong password!');
         }
 
+        // Sign a token and return it along with the user
         const token = signToken(user);
         return { token, user };
       } catch (error) {
-        console.log('Login error:', error); // Add this line to log login errors
+        console.log('Login error:', error); // Log login errors
         throw new Error('Login failed');
       }
     },
     addUser: async (parent, args) => {
       try {
+        // Create a new user
         const user = await User.create(args);
 
         if (!user) {
           throw new Error('Something went wrong!');
         }
 
+        // Sign a token and return it along with the user
         const token = signToken(user);
         return { token, user };
       } catch (error) {
-        console.log('Add user error:', error); // Add this line to log add user errors
+        console.log('Add user error:', error); // Log add user errors
         throw new Error('Add user failed');
       }
     },
     saveBook: async (parent, { input }, context) => {
       try {
+        // Find and update the user's saved books
         const updatedUser = await User.findOneAndUpdate(
           { _id: context.user._id },
           { $addToSet: { savedBooks: input } },
@@ -61,12 +68,13 @@ const resolvers = {
         );
         return updatedUser;
       } catch (err) {
-        console.log('Save book error:', err); // Add this line to log save book errors
+        console.log('Save book error:', err); // Log save book errors
         throw new Error('Error saving book');
       }
     },
     removeBook: async (parent, { bookId }, context) => {
       try {
+        // Find and update the user's saved books by removing the specified book
         const updatedUser = await User.findOneAndUpdate(
           { _id: context.user._id },
           { $pull: { savedBooks: { bookId } } },
@@ -79,7 +87,7 @@ const resolvers = {
 
         return updatedUser;
       } catch (error) {
-        console.log('Remove book error:', error); // Add this line to log remove book errors
+        console.log('Remove book error:', error); // Log remove book errors
         throw new Error('Error removing book');
       }
     },
